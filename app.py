@@ -1,7 +1,7 @@
 import flask
 import flask_wtf
 from flask_wtf import FlaskForm
-from wtforms import DateField, StringField, SubmitField, EmailField, PasswordField, SelectField
+from wtforms import DateField, StringField, SubmitField, EmailField, PasswordField, SelectField, IntegerField
 from wtforms.validators import DataRequired
 from db import db, User, Role  # Importing the db object and User model
 from flask_migrate import Migrate
@@ -26,6 +26,7 @@ class Login(FlaskForm):
     email = EmailField('Insert your email: ', validators=[DataRequired()])
     password = PasswordField('Insert your password: ', validators=[DataRequired()])
     role  = SelectField('Role', choices=[(1, 'User'), (2, 'Admin')], coerce=int)
+    nEstates = IntegerField('Number of Estates: ')
     submit = SubmitField('Submit')
 
 
@@ -37,7 +38,10 @@ def index():
 def name():
     form = Login()
     if form.validate_on_submit():
-        user = User(username=form.email.data, password=form.password.data, role_id=form.role.data)  # Assuming a default role_id for now. Creates a user obj and adds to table
+        if form.nEstates.data >= 0:
+            user = User(username=form.email.data, password=form.password.data, role_id=form.role.data, numberEstates=form.nEstates.data)
+        else:
+            return 'Number of estates must be positive!'
         db.session.add(user)
         db.session.commit()
         flask.session['email'] = form.email.data
